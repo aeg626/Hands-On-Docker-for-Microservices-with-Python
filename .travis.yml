@@ -4,6 +4,8 @@ services:
 env:
   global:
     - DOCKER_COMPOSE_VERSION=1.23.2
+    - secure: "ESW0PwxZbd8SBNIjq5w9Cktcd3CirYdemY18xtnN6SaGKoK6bgCLar6JnXMXdFSB2LgHVsBPG/8hNxIb+AO/nx9iy9ZSGGj77W7+yTX15wCQwICpREtNxkJHAruAHxaSDj546naaYz9k5ab524fYtlV3Hy5bB25zhN0hyB65g+Ky4G5tCI4V1olg5v34fbD/6dcDRxRr4t/H6dv7DsY7Jml0Xq4/Pv7HDiLP5hm/4tQP0QA+L+XDdjIXCn2sFZ41MNd+tWGI8cVFt0yDSGJQzo573/7AMiY/iBpsHFGvb1WaETQ8KnbkZif1HhWRLt8Y2UgnKcxPfYk8ypuNkdKpdkeEp1AXHWwJKSM9WfaNXNyONz9+2lWeV1fY7r8VVwVf96kj+45JAGwJ+CzPja2w3NySMKoq9CH0GT0FcKFG+43QcRkX2hYhI1W19i/m3/i/RNT49XDndVZsnGBB9XINCZMu7U2BIhyJqnczB/arvIpY5pCEI9rqg9o1obCjUBeXterlA3gYINOB6nSbeGmY/swJWjK05wWSB8b+PycOl3mcBN6ur96Ajsu4EmGBBNylpG05cdI6vW5EBxqUG2ruZMZrKSB14itS3JuYRBfcxfcAbm7NlmZheqnC0npMAyjFUQRsyjdLbEExR9UjPHjx1g/m9isnYbpDYfXOqc0MNzk="
+    - secure: "YRbEAxMagqhuVp/+9jdwB6aIefFOslx0IbOYBrzzKnSgTTabyMZblsORpxlySx3kbhjHT54HoTjQnnP9SNmlzmGe5HNGEzsrYiIFDpNzWj+re2gvcw+mQPlQM+MWLzSYHlJKoH7wGFmXcYD3i5X8onHOUj2W0YR4wD6SY5eNbCKyw51njvRquK02e9iEmPFMnVdAwBCcMqKOQghSN3ZyEy5kOcCKocoBfHxUpgtKbn1+h2oCwR3h/tKzUKR6EUfuU3Esc/J/9xLIufp2PxSGR07xyMvWrHvytqRFtnojAxhGtN40MxNZw1F8SorHkEiWcuTJeeR/yin1sgBEh1qgE6SEIBu+5x7wJ3SJ28h5A2Hg44Co17PR0rRfHd7i2pAS7SRHSXHtGNUWX5Sd5UwS+K+HCgUIQLDtCzqVPV1/Fk7QYcZZ55eu0mKDOz/GaWMwLe8nPfFOAq/g6lF4g08Ep5LMp/JboEDP2Gf5M76zxvWnflZnSmfpOBAJxChTjwnuueiYkAwabyZ98wF4CNmZSlyeN9O5/lO8+Qoe51Ob7C/vcMRflIUqEga64ro1y8oY9mgdNcuZKRhp8Zr4ewFc82/86SU+Bzko9Yhj6x07sCux3W9SXWQZDmJ0KTJUl/6RDRh2vy81x75SA3YGvi1pUINsxWoxb/FCRGPMvEDAoX4="
 
 before_install:
   - sudo rm /usr/local/bin/docker-compose
@@ -12,6 +14,8 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   - docker --version
   - docker-compose version
+  - echo "Login into Docker Hub"
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
 jobs:
   include:
@@ -28,3 +32,17 @@ jobs:
       - cd Chapter04
       - docker-compose build static-analysis
       - docker-compose run static-analysis
+    - stage: push
+      script:
+      - cd Chapter04
+      - docker-compose build server
+      - docker tag thoughts_server:latest aeg626/thoughts-backend:$TRAVIS_BRANCH
+      deploy:
+      - provider: script
+        script: docker push aeg626/thoughts-backend:$TRAVIS_BRANCH
+        on:
+          branch: master        
+      - provider: script
+        script: docker push aeg626/thoughts-backend:$TRAVIS_TAG
+        on:
+          tags: True
